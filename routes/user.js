@@ -11,8 +11,10 @@ const {
   getAppliedJobs,
   getPublishedJobs,
   getUsers,
-  deleteUserAdmin
+  deleteUserAdmin,
 } = require("../controllers/userController");
+
+//
 const { isAuthenticatedUser, authorizeRoles } = require("../middlewares/auth");
 
 router.use(isAuthenticatedUser);

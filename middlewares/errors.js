@@ -3,15 +3,17 @@ const errorHandler = require("../utils/errorHandler");
 module.exports = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
 
+  //Generer des messages d'erreur détaillés en developpement
   if (process.env.NODE_ENV === "development") {
     res.status(err.statusCode).json({
       success: false,
       error: err,
       errMessage: err.message,
-      stack: err.stack
+      stack: err.stack,
     });
   }
 
+  //Generer des messages d'erreur non détaillés en production
   if (process.env.NODE_ENV === "production") {
     let error = { ...err };
 
@@ -26,7 +28,7 @@ module.exports = (err, req, res, next) => {
 
     //Handling Mongoose Validation Error
     if (err.name === "ValidationError") {
-      const message = Object.values(err.errors).map(value => value.message);
+      const message = Object.values(err.errors).map((value) => value.message);
       error = new errorHandler(message, 400);
     }
 
@@ -50,7 +52,7 @@ module.exports = (err, req, res, next) => {
 
     res.status(error.statusCode).json({
       success: false,
-      message: error.message || "Internal server error"
+      message: error.message || "Internal server error",
     });
   }
 };

@@ -48,7 +48,7 @@ exports.getJob = catchAsyncErrors(async (req, res, next) => {
   });
 
   if (!job || job.length === 0) {
-    return next(new errorHandler("Offre non trouvé", 404));
+    return next(new errorHandler("Offre non trouvée.", 404));
   }
 
   res.status(200).json({

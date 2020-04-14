@@ -31,7 +31,7 @@ process.on("uncaughtException", (err) => {
   process.exit(1);
 });
 
-//Connextion à la base de données
+//Connexion à la base de données
 connectDatabase();
 
 //Setup security headers
