@@ -16,7 +16,7 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
   sendToken(user, 200, res);
 
   //Envoie de mail de creation de compte
-
+  console.log(user.email, user.name);
   try {
     await sendWelcomeMessage(user.email, user.name);
     //Message de success
@@ -25,7 +25,6 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
       message: `Email envoyé à : ${user.email}`,
     });
   } catch (error) {
-    console.log(error);
     return next(new errorHandler("Email n'a pas pu être envoyé."), 500);
   }
 });
