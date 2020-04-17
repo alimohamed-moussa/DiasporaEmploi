@@ -16,9 +16,20 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
   sendToken(user, 200, res);
 
   const subject = "Bienvenue sur DiasporaEmploi";
-  const content = `Bonjour et bienvenue sur DiasporaEmploi ${name}.\n\n Toute notre équipe est à votre disposition, consulter le site et poster vos annonces.`;
+  const content = `Bonjour et bienvenue sur DiasporaEmploi ${user.name}.\n\n Toute notre équipe est à votre disposition, consulter le site et poster vos annonces.`;
   //Envoie de mail de creation de compte
-  sendMail(email, subject, content);
+
+  try {
+    await sendMail(user.email, subject, content);
+
+    //Message de success
+    res.status(200).json({
+      success: true,
+      message: `Email envoyé à : ${user.email}`,
+    });
+  } catch (error) {
+    return next(new errorHandler("Email n'a pas pu être envoyé."), 500);
+  }
 });
 
 //Login user => /api/v1/Login
