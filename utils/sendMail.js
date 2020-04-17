@@ -3,16 +3,14 @@
 // using Twilio SendGrid's v3 Node.js Library
 // https://github.com/sendgrid/sendgrid-nodejs
 const sgMail = require("@sendgrid/mail");
-
-const sendMail = async (email, subject, content) => {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  const msg = {
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const sendMail = (email, subject, content) => {
+  sgMail.send({
     to: email,
-    from: "support@diaspoemploi.fr",
+    from: "alimohamed.moussa@gmail.com",
     subject: subject,
     text: content,
-  };
-  sgMail.send(msg);
+  });
 };
 
 module.exports = sendMail;
