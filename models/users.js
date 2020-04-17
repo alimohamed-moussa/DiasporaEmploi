@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "Veuillez saisir votre nom."]
+      required: [true, "Veuillez saisir votre nom."],
     },
     email: {
       type: String,
@@ -16,38 +16,38 @@ const userSchema = new mongoose.Schema(
       unique: true,
       validate: [
         validator.isEmail,
-        "Veuillez saisir une adresse email correct."
-      ]
+        "Veuillez saisir une adresse email valide.",
+      ],
     },
     role: {
       type: String,
       enum: {
         values: ["user", "employeur"],
-        message: "Veuillez selectionner un role."
+        message: "Veuillez selectionner un role.",
       },
-      default: "user"
+      default: "user",
     },
     password: {
       type: String,
       required: [true, "Veuillez saisir un mot de passe."],
       minLength: [8, "Le mot de passe doit contenir au moins 8 caractères."],
-      select: false
+      select: false,
     },
     dateCreation: {
       type: Date,
-      default: Date.now()
+      default: Date.now(),
     },
     resetPasswordToken: String,
-    resetPasswordExpire: Date
+    resetPasswordExpire: Date,
   },
   {
     toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+    toObject: { virtuals: true },
   }
 );
 
 //Cryptage du mot de passe
-userSchema.pre("save", async function(next) {
+userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     next();
   }
@@ -56,19 +56,19 @@ userSchema.pre("save", async function(next) {
 });
 
 //Retourne web token
-userSchema.methods.getJwtToken = function() {
+userSchema.methods.getJwtToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_TIME
+    expiresIn: process.env.JWT_EXPIRES_TIME,
   });
 };
 
 //Comparaison du mot de passe de l'utilisateur avec celui de la base de données
-userSchema.methods.comparePassword = async function(enterPassword) {
+userSchema.methods.comparePassword = async function (enterPassword) {
   return await bcrypt.compare(enterPassword, this.password);
 };
 
 //Password Reset token
-userSchema.methods.getResetPasswordToken = function() {
+userSchema.methods.getResetPasswordToken = function () {
   //Creation de token
   const resetToken = crypto.randomBytes(20).toString("hex");
 
@@ -89,7 +89,7 @@ userSchema.virtual("jobsPublished", {
   ref: "Job",
   localField: "_id",
   foreignField: "user",
-  justOne: false
+  justOne: false,
 });
 
 module.exports = mongoose.model("User", userSchema);

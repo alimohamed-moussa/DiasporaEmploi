@@ -24,7 +24,7 @@ const jobSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    validate: [validator.isEmail, "Veuillez saisir une adresse email correct."],
+    validate: [validator.isEmail, "Veuillez saisir une adresse email valide."],
   },
   adresse: {
     type: String,
@@ -86,12 +86,12 @@ const jobSchema = new mongoose.Schema({
         "VIE",
         "Freelance/Indépendant",
       ],
-      message: "Veuillez chosir un type de contrat",
+      message: "Veuillez choisir un type de contrat.",
     },
   },
   langues: {
     type: String,
-    required: [true, "Veuillez chosir au moins une langue de travail"],
+    required: [true, "Veuillez chosir au moins une langue de travail."],
     enum: {
       values: ["Français", "Anglais", "Espagnol"],
       message: "Veuillez chosir au moins une langue de travail",
@@ -99,7 +99,7 @@ const jobSchema = new mongoose.Schema({
   },
   etude: {
     type: String,
-    required: [true, "Veuillez selectionner un niveau d'étude"],
+    required: [true, "Veuillez selectionner un niveau de qualification."],
     enum: {
       values: [
         "Bac",
@@ -112,7 +112,7 @@ const jobSchema = new mongoose.Schema({
         "Doctorat",
         "Autres diplômes",
       ],
-      message: "Veuillez choisir un niveau détude.",
+      message: "Veuillez selectionner un niveau de qualification.",
     },
   },
   positions: {
@@ -121,7 +121,7 @@ const jobSchema = new mongoose.Schema({
   },
   experience: {
     type: String,
-    required: [true, "Veuillez selectionner un niveau d'experience"],
+    required: [true, "Veuillez selectionner votre niveau d'experience."],
     enum: {
       values: [
         "Pas d'experience",
@@ -130,7 +130,7 @@ const jobSchema = new mongoose.Schema({
         "5 à 10 ans",
         "Plus de 10 ans",
       ],
-      message: "Veuillez selectionner un niveau d'experience.",
+      message: "Veuillez selectionner votre niveau d'experience.",
     },
   },
   salaire: {

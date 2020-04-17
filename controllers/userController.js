@@ -21,18 +21,19 @@ exports.getUserProfile = catchAsyncErrors(async (req, res, next) => {
 });
 
 //Update user password =>/api/v1/password/update
+//Need to provide the current password and new password
 exports.updatePassword = catchAsyncErrors(async (req, res, next) => {
-  //Get the user
+  //Get the user password
   const user = await User.findById(req.user.id).select("+password");
 
-  //Check previous password
+  //Check previous password (in the Database)
   const isMatched = await user.comparePassword(req.body.currentPassword);
 
   if (!isMatched) {
-    return next(new errorHandler(" Le mot de passe est incorrect", 401));
+    return next(new errorHandler(" Le mot de passe est incorrect.", 401));
   }
 
-  //Save the new password
+  //Save the new password (provide new password)
   user.password = req.body.newPassword;
 
   await user.save();
@@ -41,6 +42,7 @@ exports.updatePassword = catchAsyncErrors(async (req, res, next) => {
 });
 
 //UPDATE current user data =>/api/v1/me/update
+//User can only changee his email and name
 exports.updateUser = catchAsyncErrors(async (req, res, next) => {
   //User new data
   const newUserData = {

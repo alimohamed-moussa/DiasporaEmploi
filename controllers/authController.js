@@ -3,6 +3,7 @@ const catchAsyncErrors = require("../middlewares/catchAsyncErrors.js");
 const errorHandler = require("../utils/errorHandler");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail");
+const sendMail = require("../utils/sendMail");
 const crypto = require("crypto");
 
 //Ajout d'un nouveau user  => /api/v1/register
@@ -13,6 +14,11 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
 
   //Creation d'un JWT token
   sendToken(user, 200, res);
+
+  const subject = "Bienvenue sur DiasporaEmploi";
+  const content = `Bonjour et bienvenue sur DiasporaEmploi ${name}.\n\n Toute notre équipe est à votre disposition, consulter le site et poster vos annonces.`;
+  //Envoie de mail de creation de compte
+  sendMail(email, subject, content);
 });
 
 //Login user => /api/v1/Login
@@ -74,13 +80,13 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
     await sendEmail({
       email: user.email,
       subject: "DiasporaEmploi - Récupération de mot de passe",
-      message
+      message,
     });
 
     //Message de success
     res.status(200).json({
       success: true,
-      message: `Email envoyé à : ${user.email}`
+      message: `Email envoyé à : ${user.email}`,
     });
   } catch (error) {
     user.resetPasswordToken = undefined;
@@ -102,7 +108,7 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
 
   const user = await User.findOne({
     resetPasswordToken,
-    resetPasswordToken: { $gt: Date.now() }
+    resetPasswordToken: { $gt: Date.now() },
   });
 
   if (!user) {
@@ -133,11 +139,11 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
 exports.logout = catchAsyncErrors(async (req, res, next) => {
   res.cookie("token", "none", {
     expires: new Date(Date.now()),
-    httpOnly: true
+    httpOnly: true,
   });
 
   res.status(200).json({
     success: true,
-    message: "Deconnexion."
+    message: "Deconnexion.",
   });
 });
