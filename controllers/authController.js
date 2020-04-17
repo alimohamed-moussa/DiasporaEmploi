@@ -25,6 +25,7 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
       message: `Email envoyé à : ${user.email}`,
     });
   } catch (error) {
+    console.log(error);
     return next(new errorHandler("Email n'a pas pu être envoyé."), 500);
   }
 });
