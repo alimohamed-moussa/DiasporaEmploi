@@ -3,7 +3,6 @@ const catchAsyncErrors = require("../middlewares/catchAsyncErrors.js");
 const errorHandler = require("../utils/errorHandler");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail");
-const { sendWelcomeMessage } = require("../utils/sendMail");
 const crypto = require("crypto");
 
 //Ajout d'un nouveau user  => /api/v1/register
@@ -12,21 +11,11 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
 
   const user = await User.create({ name, email, password, role });
 
+  //Envoie de mail de creation de compte
+  //sendWelcomeMessage(user.email, user.name);
+
   //Creation d'un JWT token
   sendToken(user, 200, res);
-
-  //Envoie de mail de creation de compte
-  console.log(user.email, user.name);
-  try {
-    await sendWelcomeMessage(user.email, user.name);
-    //Message de success
-    res.status(200).json({
-      success: true,
-      message: `Email envoyé à : ${user.email}`,
-    });
-  } catch (error) {
-    return next(new errorHandler("Email n'a pas pu être envoyé."), 500);
-  }
 });
 
 //Login user => /api/v1/Login

@@ -1,9 +1,11 @@
 const Job = require("../models/jobs");
-const errorHandler = require("../utils/errorHandler");
+const ErrorHandler = require("../utils/errorHandler");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const APIFilters = require("../utils/apiFilters");
 const path = require("path");
 const fs = require("fs");
+const fileUpload = require("express-fileupload");
+const sendEmail = require("../utils/sendEmail");
 
 const geoCoder = require("../utils/geocoder");
 
@@ -184,7 +186,7 @@ exports.getStats = catchAsyncErrors(async (req, res, next) => {
 // Apply to job using Resume  =>  /api/v1/job/:id/apply
 exports.applyJob = catchAsyncErrors(async (req, res, next) => {
   //Rechercher le job
-  let job = await Job.findById(req.params.id).select("+postulants");
+  let job = await Job.findById(req.params.id).select("+postulants titre email");
 
   //Vérifier que le job existe
   if (!job) {
@@ -207,58 +209,120 @@ exports.applyJob = catchAsyncErrors(async (req, res, next) => {
     }
   }
 
-  // Vérification des fichiers
-  if (!req.files) {
+  const cv = req.files.cv;
+  const lettre_motivation = req.files.lettre_motivation;
+
+  // Vérification des fichiers CV car la lettre de motivation n'est pas obligatoire
+  if (!cv) {
     return next(new ErrorHandler("Veuillez ajouter un fichier.", 400));
   }
 
-  const file = req.files.file;
-
-  // Vérification du type de fichier
+  // Vérification du type de fichier CV
   const supportedFiles = /.doc|.docx|.pdf/;
-  if (!supportedFiles.test(path.extname(file.name))) {
-    return next(new ErrorHandler("Veuillez ajouter un fichier.", 400));
+  if (!supportedFiles.test(path.extname(cv.name))) {
+    return next(
+      new ErrorHandler(
+        "Veuillez ajouter des fichiers au bon format, seuls les formats: .doc, .docx, .pdf sont autorisés",
+        400
+      )
+    );
   }
 
-  // Vérification de la taille du fichier
-  if (file.size > process.env.MAX_FILE_SIZE) {
+  // Vérification du type de fichier Lettre de motivation
+  const supportedFile = /.doc|.docx|.pdf/;
+  if (!supportedFile.test(path.extname(lettre_motivation.name))) {
+    return next(
+      new ErrorHandler(
+        "Veuillez ajouter des fichiers au bon format, seuls les formats: .doc, .docx, .pdf sont autorisés",
+        400
+      )
+    );
+  }
+
+  // Vérification de la taille du fichier CV
+  if (cv.size > process.env.MAX_FILE_SIZE) {
+    return next(
+      new ErrorHandler("La taille du fichier doit être inférieure à 4MB.", 400)
+    );
+  }
+
+  // Vérification de la taille du fichier LETTRE_MOTIVATION
+  if (lettre_motivation.size > process.env.MAX_FILE_SIZE) {
     return next(
       new ErrorHandler("La taille du fichier doit être inférieure à 4MB.", 400)
     );
   }
 
   // Renommer le cv
-  file.name = `${req.user.name.replace(" ", "_")}_${job._id}${
-    path.parse(file.name).ext
+  cv.name = `CV_${req.user.name.replace(" ", "_")}_${job._id}${
+    path.parse(cv.name).ext
   }`;
 
-  file.mv(`${process.env.UPLOAD_PATH}/${file.name}`, async (err) => {
+  // Renommer la lettre_motivation
+  lettre_motivation.name = `lettre_${req.user.name.replace(" ", "_")}_${
+    job._id
+  }${path.parse(lettre_motivation.name).ext}`;
+
+  cv.mv(`${process.env.UPLOAD_PATH}/${cv.name}`, async (err) => {
     if (err) {
       console.log(err);
       return next(new ErrorHandler("Echec de chargement du cv.", 500));
     }
-
-    await Job.findByIdAndUpdate(
-      req.params.id,
-      {
-        $push: {
-          postulants: {
-            id: req.user.id,
-            resume: file.name,
-          },
+  });
+  lettre_motivation.mv(
+    `${process.env.UPLOAD_PATH}/${lettre_motivation.name}`,
+    async (err) => {
+      if (err) {
+        console.log(err);
+        return next(
+          new ErrorHandler(
+            "Echec de chargement de la lettre de motivation.",
+            500
+          )
+        );
+      }
+    }
+  );
+  await Job.findByIdAndUpdate(
+    req.params.id,
+    {
+      $push: {
+        postulants: {
+          id: req.user.id,
+          cv: cv.name,
+          lettre: lettre_motivation.name,
         },
       },
-      {
-        new: true,
-        runValidators: true,
-        useFindAndModify: false,
-      }
-    );
+    },
+    {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    }
+  );
+  //sendUserApplyMessage(req.user.email, req.user.name, job);
+  const messageCandidat = `Bonjour ${req.user.name},\n\n Votre candidature pour le poste de ${job.titre} a bien été transmise au recruteur.\n\n Cordialement, \n\n L'équipe DiasporaEmploi`;
 
-    res.status(200).json({
-      success: true,
-      message: "Candidature envoyé avec success.",
-      data: file.name,
-    });
+  const messageRecruteur = `Bonjour,\n\n ${req.user.name} vient de répondre à votre offre pour le poste de ${job.titre}.\n\n Cordialement, \n\n L'équipe DiasporaEmploi`;
+
+  //Envoie du mail  aux recruteurs
+  await sendEmail({
+    email: job.email,
+    subject: "Reception de nouvelle candidature - DiasporaEmploi",
+    messageRecruteur,
+  });
+
+  //Envoie du mail aux candidats
+  await sendEmail({
+    email: req.user.email,
+    subject: "Accusé de reception candidat - DiasporaEmploi",
+    messageCandidat,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Candidature envoyé avec success.",
+    cv: cv.name,
+    lettre: lettre_motivation.name,
   });
 });
