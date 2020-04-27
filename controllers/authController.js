@@ -13,6 +13,14 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
 
   //Envoie de mail de creation de compte
   //sendWelcomeMessage(user.email, user.name);
+  const message = `Bonjour ${user.name},\n\n Bienvenue sur DiasporaEmploi, vous pouvez dès à présent vous connecter au site avec vos identifiants.\n\n Cordialement, \n\n L'équipe DiasporaEmploi`;
+
+  //Envoie du mail  aux recruteurs
+  await sendEmail({
+    email: user.email,
+    subject: "Bienveunue - DiasporaEmploi",
+    message,
+  });
 
   //Creation d'un JWT token
   sendToken(user, 200, res);

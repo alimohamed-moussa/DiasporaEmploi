@@ -108,7 +108,7 @@ exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
   //Send the response
   res.status(200).json({
     success: true,
-    message: "Votre compte a bien été supprimé.",
+    message: "Votre compte a été supprimé.",
   });
 });
 
@@ -150,16 +150,18 @@ exports.deleteUserAdmin = catchAsyncErrors(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    message: "Utilisateur supprimé par l'Admin.",
+    message: "Utilisateur a été supprimé par l'Admin.",
   });
 });
 
 //Delete User Data
 async function deleteUserData(user, role) {
+  //Suppression de tous les documents en fonction d'un utilisateur
   if (role === "employeur") {
     await Job.deleteMany({ user: user });
   }
 
+  //Suppression des cv et lettre de motivation de l'utilisateur
   if (role === "user") {
     const appliedJobs = await Job.find({ "postulants.id": user }).select(
       "+postulants"
@@ -168,12 +170,21 @@ async function deleteUserData(user, role) {
     for (let i = 0; i < appliedJobs.length; i++) {
       let obj = appliedJobs[i].postulants.find((o) => o.id === user);
 
-      let filepath = `${__dirname}/public/uploads/${obj.resume}`.replace(
+      let filepath = `${__dirname}/public/uploads/${obj.cv}`.replace(
+        "\\controllers",
+        ""
+      );
+
+      let filepath2 = `${__dirname}/public/uploads/${obj.lettre_motivation}`.replace(
         "\\controllers",
         ""
       );
 
       fs.unlink(filepath, (err) => {
+        if (err) return console.log(err);
+      });
+
+      fs.unlink(filepath2, (err) => {
         if (err) return console.log(err);
       });
 

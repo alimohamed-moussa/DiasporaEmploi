@@ -89,8 +89,10 @@ exports.updateJob = catchAsyncErrors(async (req, res, next) => {
 
 //DELETE job =>/api/v1/job/:id
 exports.deleteJob = catchAsyncErrors(async (req, res, next) => {
+  //Retrouver l'offre
   let job = await Job.findById(req.params.id).select("+postulants");
 
+  //Erreur si l'offre n'existe pas
   if (!job) {
     return next(new errorHandler("Offre non trouvé", 404));
   }
@@ -105,12 +107,21 @@ exports.deleteJob = catchAsyncErrors(async (req, res, next) => {
   //Deleting files associated with the job
 
   for (let i = 0; i < job.postulants.length; i++) {
-    let filepath = `${__dirname}/public/uploads/${job.postulants[i].resume}`.replace(
+    let filepath = `${__dirname}/public/uploads/${job.postulants[i].cv}`.replace(
+      "\\controllers",
+      ""
+    );
+
+    let filepath2 = `${__dirname}/public/uploads/${job.postulants[i].lettre_motivation}`.replace(
       "\\controllers",
       ""
     );
 
     fs.unlink(filepath, (err) => {
+      if (err) return console.log(err);
+    });
+
+    fs.unlink(filepath2, (err) => {
       if (err) return console.log(err);
     });
   }
